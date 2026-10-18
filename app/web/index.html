@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><title>学科在线答疑（复现版）</title>
+<style>
+  body { font-family: "Microsoft YaHei", sans-serif; max-width: 760px; margin: 24px auto; }
+  input, button { padding: 8px 12px; font-size: 14px; }
+  .card { border: 1px solid #d9dee5; border-radius: 8px; padding: 14px; margin: 12px 0; }
+  .meta { color: #6b7280; font-size: 13px; }
+  pre { white-space: pre-wrap; background: #f6f8fa; padding: 10px; border-radius: 6px; }
+</style></head>
+<body>
+<h2>学科在线答疑系统（复现版）</h2>
+<div class="card">
+  <input id="q" size="46" placeholder="例如：怎么选课？"><button onclick="ask()">提问</button>
+  <pre id="answer"></pre><div id="meta" class="meta"></div>
+  <button onclick="fb(true)">有用</button><button onclick="fb(false)">没用</button>
+</div>
+<div class="card"><button onclick="stats()">查看命中率统计</button><pre id="stats"></pre></div>
+<script>
+let last = '';
+async function ask() {
+  const r = await fetch('/ask', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({question: q.value})});
+  const d = await r.json(); last = d.question;
+  answer.textContent = d.answer;
+  meta.textContent = '来源：' + d.source + ' ｜ 相关度：' + d.score + ' ｜ 耗时：' + d.elapsed_ms + 'ms';
+}
+async function fb(useful) {
+  if (!last) return;
+  await fetch('/feedback', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({question: last, useful})});
+  alert('已记录');
+}
+async function stats() {
+  const r = await fetch('/stats'); stats.textContent = JSON.stringify(await r.json(), null, 2);
+}
+</script></body></html>
